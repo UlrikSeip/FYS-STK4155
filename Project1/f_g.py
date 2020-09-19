@@ -13,6 +13,7 @@ from numba import jit
 from PIL import Image
 from sklearn.model_selection import train_test_split
 from imageio import imread
+from sklearn.preprocessing import StandardScaler
 
 # Add the src/ directory to the python path so we can import the code 
 # we need to use directly as 'from <file name> import <function/class>'
@@ -24,9 +25,9 @@ from designMat import designMatrix
 from Bootstrap import Bootstrap
 from Crossvalidation import CrossValidation
 
-def data(image_number = 1, plotting = True):
+def data(image_number = 1, plotting = False):
     """
-    Extracts the terrain data
+    Extracts the terrain data 
     
     Argumets:
     image_number: Integer type, accepting arguments either '1', '2'. Indicates the number of image
@@ -83,12 +84,12 @@ def data(image_number = 1, plotting = True):
 
     return x1_train, x2_train, y_train, x1_test, x2_test, y_test
 
-data(plotting = True)
 
 ###Fit the model 
-def fit_terrain(plotting=False) :
+def fit_terrain(plot=False) :
     """
-    Fits OLS, Ridge and Lasso on the terrain data and plots the fit
+    Fits OLS, Ridge and Lasso on the terrain data and plots the fit 
+    Before fitting, divides the data into train and test data and scales
     
     Arguments:
     plotting: Binary type, accepting arguments True/False. If True, plots the fit.
@@ -96,20 +97,23 @@ def fit_terrain(plotting=False) :
     x1_train, x2_train, y_train, x1_test, x2_test, y_test = data(image_number=2, plotting=False)
 
     for method in ['ols', 'ridge', 'lasso'] :
-        lambda_ = 0.01
+        lambda_ = 0.1
         linreg = linregOwn(method=method)
         
         X_train = designMatrix(x1_train, x2_train)
-        print(X_train.shape)
+        scaler = StandardScaler()
+        scaler.fit(X_train)
+        X_train = scaler.transform(X_train)
+        X_train[:, 0] = 1
         linreg.fit(X_train,y_train, lambda_ = lambda_)
-        if method == 'ols':
-            linreg.fit(X_train,y_train, lambda_ = 0)
 
         X_test = designMatrix(x1_test, x2_test)
+        x_test = scaler.transform(X_test)
+        X_test[:, 0] = 1
         linreg.predict(X_test)
         print(linreg.MSE(y_test))
 
-        if plotting :
+        if plot :
             x = np.linspace(0, 1, 60)
             y = np.copy(x)
             XX,YY = np.meshgrid(x,y)
@@ -127,7 +131,7 @@ def fit_terrain(plotting=False) :
             plt.show()
             
     ##Plots the extracted test data
-    if plotting :
+    if plot :
         x = np.linspace(0, 1, 60)
         y = np.copy(x)
         XX,YY = np.meshgrid(x,y)
@@ -143,7 +147,7 @@ def fit_terrain(plotting=False) :
         #plt.savefig(os.path.join(os.path.dirname(__file__), 'Plots', 'test_terrain.png'), transparent=True, bbox_inches='tight')
         plt.show()
 
-fit_terrain(plotting = True)
+fit_terrain(plot = True)
 
 ##Plot MSE for each model by cross-validation
 def MSE_terrain() :
@@ -157,9 +161,15 @@ def MSE_terrain() :
     ## Fit and predict ols
     linreg = linregOwn(method='ols')
     X_train = designMatrix(x1_train, x2_train, degree)
+    scaler = StandardScaler()
+    scaler.fit(X_train)
+    X_train = scaler.transform(X_train)
+    X_train[:, 0] = 1
     linreg.fit(X_train,y_train)
 
     X_test = designMatrix(x1_test, x2_test, degree)
+    X_test = scaler.transform(X_test)
+    X_test[:, 0] = 1
     linreg.predict(X_test)
     ols_MSE = linreg.MSE(y_test)
     ols_MSE = np.array([ols_MSE, ols_MSE])
@@ -167,7 +177,7 @@ def MSE_terrain() :
     ols_lambda = np.array([1e-5, 1])
 
     ###Choose lambda for ridge and fit and compute MSE on the test data
-    ridge_lambda = np.logspace(-5,0,20)
+    ridge_lambda = np.logspace(-3,0,10)
     ridge_MSE = []
     for lambda_ in ridge_lambda : 
         print("ridge "+ str(lambda_))
@@ -175,31 +185,43 @@ def MSE_terrain() :
         linreg = linregOwn(method='ridge')
         
         X_train = designMatrix(x1_train, x2_train, degree)
+        scaler = StandardScaler()
+        scaler.fit(X_train)
+        X_train = scaler.transform(X_train)
+        X_train[:, 0] = 1
         linreg.fit(X_train,y_train, lambda_)
 
         X_test = designMatrix(x1_test, x2_test, degree)
+        X_test = scaler.transform(X_test)
+        X_test[:, 0] = 1
         linreg.predict(X_test)
-        ridge_MSE.append(linreg.MSE(y_test))
-        print(linreg.MSE(y_test))
+        yHat = linreg.predict(X_test)
+        ridge_MSE.append(np.sum( (y_test-yHat)**2)/len(y_test))
 
     ridge_MSE = np.array(ridge_MSE)
     
     ##Choose lambda for lasso and fit and compute MSE on the test data
-    lasso_lambda = np.logspace(-4,0,20)
+    lasso_lambda = np.logspace(-4,0,10)
     lasso_MSE = []
     for lambda_ in lasso_lambda : 
         print("lasso " + str(lambda_))
         linreg = linregOwn(method='lasso')
         
         X_train = designMatrix(x1_train, x2_train, degree)
+        scaler = StandardScaler()
+        scaler.fit(X_train)
+        X_train = scaler.transform(X_train)
+        X_train[:, 0] = 1
         linreg.fit(X_train,y_train, lambda_)
 
         X_test = designMatrix(x1_test, x2_test, degree)
-        linreg.predict(X_test)
-        lasso_MSE.append(linreg.MSE(y_test))
+        X_test = scaler.transform(X_test)
+        X_test[:, 0] = 1
+        yHat = linreg.predict(X_test)
+        lasso_MSE.append(np.sum( (y_test-yHat)**2)/len(y_test))
 
     lasso_MSE = np.array(ridge_MSE)
-    
+
     ######################################################## plot
     plt.rc('text', usetex=True)
 
@@ -211,7 +233,7 @@ def MSE_terrain() :
     plt.ylabel(r"MSE",  fontsize=10)
     plt.subplots_adjust(left=0.2,bottom=0.2)
     plt.legend(fontsize=10)
-    plt.savefig(os.path.join(os.path.dirname(__file__), 'Plots', 'MSE_lambda_terrain.png'), transparent=True, bbox_inches='tight')
+    #plt.savefig(os.path.join(os.path.dirname(__file__), 'Plots', 'MSE_lambda_terrain.png'), transparent=True, bbox_inches='tight')
     plt.show()
     
 MSE_terrain()

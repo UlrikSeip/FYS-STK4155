@@ -12,6 +12,7 @@ import time
 from numba import jit
 from PIL import Image
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 # Add the src/ directory to the python path so we can import the code 
 # we need to use directly as 'from <file name> import <function/class>'
@@ -24,7 +25,7 @@ from Bootstrap import Bootstrap
 
 ######## a) Plot Franke Function without/with Noise ########
 
-def plot_franke(x, y, noise = False, scalor = 0.05, method = 'ols', seed1 = 8172, lambda_ = 0.005, absolute_error = False):
+def plot_franke(x, y, franke_ = False, noise = False, scalor = 0.05, method = 'ols', seed1 = 8172, lambda_ = 0.005, absolute_error = False):
     """
     Plots the franke function.Franke's function has two Gaussian peaks of different heights, 
     and a smaller dip. It is used as a test function in interpolation problems.
@@ -37,7 +38,9 @@ def plot_franke(x, y, noise = False, scalor = 0.05, method = 'ols', seed1 = 8172
     Arguments:
     x:  1-dimensional numpy array (1D np.array)
     y:  1-dimensional numpy array (1D np.array)
-    noise: binary argument with inputs True/False. If 'True', plots the franke function with added noise.
+    franke_: binary argument with inputs True/False. If 'True', plots the franke function
+    noise: binary argument with inputs True/False. If 'True', plots the franke function with added noise. 
+           Activated only when franke_ == True.
     scalor: float type,  controls the amount of noise to be added to the franke function. Activated only when
             noise == True.
     method: character input accepting 'ols', 'ridge', 'lasso'. Plots the corresponding model fit.
@@ -64,7 +67,11 @@ def plot_franke(x, y, noise = False, scalor = 0.05, method = 'ols', seed1 = 8172
         yn = y_new.ravel()
         fn = franke(xn, yn) 
         X = designMatrix(xn, yn)
-        linreg = linregOwn(method = method)
+        scaler = StandardScaler()
+        scaler.fit(X)
+        X = scaler.transform(X)
+        X[:, 0] = 1
+        linreg = linregOwn(method = 'ols')
         beta = linreg.fit(X, fn)
         
         xnew = np.linspace(0, 1, np.size(x_new))
@@ -75,6 +82,11 @@ def plot_franke(x, y, noise = False, scalor = 0.05, method = 'ols', seed1 = 8172
         xn = Xnew.ravel()
         yn = Ynew.ravel()
         xb_new = designMatrix(xn, yn)
+        scaler = StandardScaler()
+        scaler.fit(xb_new)
+        xb_new = scaler.transform(xb_new)
+        xb_new[:, 0] = 1
+    
         f_predict = np.dot(xb_new, beta)
         F_predict = f_predict.reshape(F_true.shape)
     ##fit and predict ridge
@@ -84,10 +96,14 @@ def plot_franke(x, y, noise = False, scalor = 0.05, method = 'ols', seed1 = 8172
         y_new = np.random.rand(500)
         xn = x_new.ravel()
         yn = y_new.ravel()
-        fn = franke(xn, yn)
+        fn = franke(xn, yn) 
         X = designMatrix(xn, yn)
-        linreg = linregOwn(method = method)
-        beta = linreg.fit(X, fn, lambda_)
+        scaler = StandardScaler()
+        scaler.fit(X)
+        X = scaler.transform(X)
+        X[:, 0] = 1
+        linreg = linregOwn(method = 'ridge')
+        beta = linreg.fit(X, fn, lambda_ = 0.1)
         
         xnew = np.linspace(0, 1, np.size(x_new))
         ynew = np.linspace(0, 1, np.size(x_new))
@@ -97,6 +113,11 @@ def plot_franke(x, y, noise = False, scalor = 0.05, method = 'ols', seed1 = 8172
         xn = Xnew.ravel()
         yn = Ynew.ravel()
         xb_new = designMatrix(xn, yn)
+        scaler = StandardScaler()
+        scaler.fit(xb_new)
+        xb_new = scaler.transform(xb_new)
+        xb_new[:, 0] = 1
+    
         f_predict = np.dot(xb_new, beta)
         F_predict = f_predict.reshape(F_true.shape)
     ##fit and predict lasso
@@ -106,10 +127,14 @@ def plot_franke(x, y, noise = False, scalor = 0.05, method = 'ols', seed1 = 8172
         y_new = np.random.rand(500)
         xn = x_new.ravel()
         yn = y_new.ravel()
-        fn = franke(xn, yn)
+        fn = franke(xn, yn) 
         X = designMatrix(xn, yn)
-        linreg = linregOwn(method = method)
-        beta = linreg.fit(X, fn, lambda_)
+        scaler = StandardScaler()
+        scaler.fit(X)
+        X = scaler.transform(X)
+        X[:, 0] = 1
+        linreg = linregOwn(method = 'lasso')
+        beta = linreg.fit(X, fn, lambda_ = 0.1)
         
         xnew = np.linspace(0, 1, np.size(x_new))
         ynew = np.linspace(0, 1, np.size(x_new))
@@ -119,13 +144,17 @@ def plot_franke(x, y, noise = False, scalor = 0.05, method = 'ols', seed1 = 8172
         xn = Xnew.ravel()
         yn = Ynew.ravel()
         xb_new = designMatrix(xn, yn)
+        scaler = StandardScaler()
+        scaler.fit(xb_new)
+        xb_new = scaler.transform(xb_new)
+        xb_new[:, 0] = 1
+    
         f_predict = np.dot(xb_new, beta)
         F_predict = f_predict.reshape(F_true.shape)
-    
+        
     #Plot the Franke Function
     fig = plt.figure()
     ax = fig.gca(projection='3d') ##get current axis
-    surf = ax.plot_surface(x, y, f, cmap= 'coolwarm', linewidth= 0, antialiased= False) ## colormap is coolwarm,
     ## antialiased controls the transparency of the surface
     if method == 'ols':
         if absolute_error == True:
@@ -144,26 +173,31 @@ def plot_franke(x, y, noise = False, scalor = 0.05, method = 'ols', seed1 = 8172
             surf = ax.plot_surface(Xnew, Ynew,F_predict, cmap = cm.coolwarm, linewidth = 0, antialiased = False)
 
     #Customize z axis
+    if franke_ == True:
+        surf = ax.plot_surface(x, y, f, cmap= 'coolwarm', linewidth= 0, antialiased= False) ## colormap is coolwarm,
+        ax.set_title('Franke function without noise')
+        if(noise):
+            ax.set_title('Franke function with noise')
+            
     ax.set_zlim(-0.10, 1.4)
     ax.zaxis.set_major_locator(LinearLocator(5))
     ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
     ax.view_init(30, 45)
     #Labeling axes and title
-    ax.set_title('Franke function without noise')
+
     if method == 'ols':
         ax.set_title('OLS Fit')
     if method == 'ridge':
         ax.set_title('Ridge Fit')
     if method == 'lasso':
         ax.set_title('Lasso Fit')
-    if(noise):
-        ax.set_title('Franke function with noise')
+    
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
 
     #Add colour bar
     fig.colorbar(surf, shrink= 0.5, aspect= 0.5)
-    #plt.savefig(os.path.join(os.path.dirname(__file__), 'Plots', 'lasso_abs_error.png'), transparent=True, bbox_inches='tight')
+    #plt.savefig(os.path.join(os.path.dirname(__file__), 'Plots', 'franke_abs_lasso.png'), transparent=True, bbox_inches='tight')
     return plt.show()
  
  
@@ -174,10 +208,10 @@ x = np.linspace(0, 1, 100)
 y = np.linspace(0, 1, 100)
 
 ##Franke function no noise
-plot_franke(x, y, noise = False, method = None)
+plot_franke(x, y, franke_ = True, noise = False, method = None)
 
 ##Franke function with noise
-plot_franke(x, y, noise = True, method = None)
+plot_franke(x, y, franke_ = True, noise = True, method = None)
 
 ##OLS fit on franke function/ without noise
 plot_franke(x, y, noise = False, method = 'ols', absolute_error = False)

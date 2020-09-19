@@ -12,6 +12,7 @@ import time
 from numba import jit
 from PIL import Image
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 # Add the src/ directory to the python path so we can import the code 
 # we need to use directly as 'from <file name> import <function/class>'
@@ -24,7 +25,7 @@ from Bootstrap import Bootstrap
 from Crossvalidation import CrossValidation
 
 ##### Plot MSE vs complexity of the data for the train and test data sets
-def plot_MSE_Complexity(degree = 7, graph = True):
+def plot_MSE_Complexity(degree = 5, graph = True):
     """
     Plots mean squared error (MSE) as a function of the complexity (i.e. polynomial degree) parameter 
     on the train and test data set. MSE is calculated using the OLS on the train and test data sets.
@@ -35,7 +36,7 @@ def plot_MSE_Complexity(degree = 7, graph = True):
     """
     
     ##Make synthetic data
-    n = 500
+    n = 300
     np.random.seed(18271)
     x1 = np.random.rand(n)
     np.random.seed(91837)
@@ -46,10 +47,16 @@ def plot_MSE_Complexity(degree = 7, graph = True):
     x1_train, x1_test, x2_train, x2_test, y_train, y_test = train_test_split(x1, x2, y, test_size=0.2)
     MSE_train     = []
     MSE_test      = []
-    ##fit OLS with polynomial of different degree and compute MSE on the train and test data
+    ##fit OLS with polynomial of different degree and compute MSE on the train and test data(with scaling)
     for degs in range(1, degree+1):
         X_train_     = designMatrix(x1_train, x2_train, degs)
+        scaler = StandardScaler()
+        scaler.fit(X_train_)
+        X_train_ = scaler.transform(X_train_)
+        X_train_[:, 0] = 1
         X_test_      = designMatrix(x1_test, x2_test, degs)
+        X_test_ = scaler.transform(X_test_)
+        X_test_[:, 0] = 1
         linreg = linregOwn()
         beta_ = linreg.fit(X_train_, y_train)
         pred_train = linreg.predict(X_train_)
@@ -78,9 +85,13 @@ def plot_MSE_Complexity(degree = 7, graph = True):
         #plt.savefig(os.path.join(os.path.dirname(__file__), 'Plots', 'MSE_train_test.png'), transparent=True, bbox_inches='tight')
     return plt.show()
 
+##train and test data MSE  
+plot_MSE_Complexity(degree = 10, graph = True)  
+
+
 
 ######## Bias-Variance-Tradeoff using either bootstrap or cross-validation #############  
-def plot_bias_var_tradeoff(ndegree = 6, sampling_method = 'bootstrap', method = 'ols'):
+def plot_bias_var_tradeoff(ndegree = 6, method = 'ols'):
     
     """
     Plots the bias-variance tradeoff using either bootstrap or cross-validation.
@@ -103,29 +114,16 @@ def plot_bias_var_tradeoff(ndegree = 6, sampling_method = 'bootstrap', method = 
     var = []
     MSE = []
     ##compute bias, variance and mse using bootstrap
-    if sampling_method == 'bootstrap':
-        for deg in range(1, ndegree + 1):
-            bias_, var_, mse_, betavar_ = Bootstrap(x1, x2, y, degrees = deg, method = method)
-            bias.append(bias_)
-            var.append(var_)
-            MSE.append(mse_)
-    ##compute bias, variance, mse using cross-validation
-    if sampling_method == 'cv':
-        linreg = linregOwn(method=method)
-        cv = CrossValidation(linreg, designMatrix)
-        for deg in range(1, ndegree + 1):
-            means =  cv.kFoldCV(x1, x2, y,10, degree = deg)
-            bias.append(means[3])
-            var.append(means[2])
-            MSE.append(means[0])
+    for deg in range(1, ndegree + 1):
+        bias_, var_, mse_, betavar_ = Bootstrap(x1, x2, y, degrees = deg, method = method)
+        bias.append(bias_)
+        var.append(var_)
+        MSE.append(mse_)
             
     plot, ax = plt.subplots()
     plt.xlabel('Complexity (Order of polynomial)')
     plt.ylabel('MSE')
-    if sampling_method == 'bootstrap':
-        plt.title('Bias-Variance tradeoff using bootstrap' )
-    if sampling_method == 'cv':
-        plt.title('Bias-Variance tradeoff using cross-validation')
+    plt.title('Bias-Variance tradeoff using bootstrap' )
     plt.plot(range(1, ndegree+1), MSE, 'k-o', label = 'MSE') 
     plt.plot(range(1, ndegree+1), bias, 'b-o',label= 'Bias')
     plt.plot(range(1, ndegree+1), var, 'r-o',label = 'Variance') 
@@ -133,22 +131,17 @@ def plot_bias_var_tradeoff(ndegree = 6, sampling_method = 'bootstrap', method = 
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
     plt.legend()
     plt.subplots_adjust(left=0.2,bottom=0.2,right=0.9)
-    #plt.savefig(os.path.join(os.path.dirname(__file__), 'Plots', 'ols_bias_var_cv.png'), transparent=True, bbox_inches='tight')
+    #plt.savefig(os.path.join(os.path.dirname(__file__), 'Plots', 'ols_bias_var.png'), transparent=True, bbox_inches='tight')
     return plt.show()
   
   
-##train and test data MSE  
-plot_MSE_Complexity(degree = 8, graph = True)  
-
 
 ##MSE bias-variance tradeoff using bootstrap
-plot_bias_var_tradeoff(ndegree=6, sampling_method= 'bootstrap')
-
-##MSE bias-variance tradeoff using cross-validation
-plot_bias_var_tradeoff(ndegree=6, sampling_method = 'cv')       
+##When I try polynomial degree 13, then variance dominates, so lasso and ridge should become effective
+#plot_bias_var_tradeoff(ndegree=6)
        
 
-def plot_franke_noise(method = 'ols') :
+def plot_franke_noise() :
     
     """
     Plots mean squared error (MSE) and R2 score as a function of the noise scalor 
@@ -177,10 +170,16 @@ def plot_franke_noise(method = 'ols') :
     
     for eta in noise :
         y_data_noise = y +  eta * np.random.standard_normal(size = y.size)
-        linreg = linregOwn(method = method)
+        linreg = linregOwn(method = 'ols')
         x1_train, x1_test, x2_train, x2_test, y_train, y_test, y_noise_train, y_noise_test = train_test_split(x1, x2, y,y_data_noise, test_size=0.35, random_state = 42)
         X_train = designMatrix(x1_train, x2_train, 3)
         X_test = designMatrix(x1_test, x2_test, 3)
+        scaler = StandardScaler()
+        scaler.fit(X_train)
+        X_train = scaler.transform(X_train)
+        X_train[:, 0] = 1
+        X_test = scaler.transform(X_test)
+        X_test[:, 0] = 1
         linreg.fit(X_train, y_noise_train)
         linreg.predict(X_test)
         MSE_noise.         append(linreg.MSE(y_noise_test))
@@ -191,8 +190,6 @@ def plot_franke_noise(method = 'ols') :
         linreg_NOnoise.predict(X_test)
         MSE.append(linreg.MSE(y_test))
         R2. append(linreg.R2(y_test))
-    
-    print(1-np.array(R2_noise))
     fig, ax1 = plt.subplots()
     ax1.loglog(noise, 1-np.array(R2_noise),'k-o',markersize=2)
     ax1.loglog(noise, 1-np.array(R2),'k--',markersize=2)
@@ -213,7 +210,7 @@ def plot_franke_noise(method = 'ols') :
     return plt.show()
 
 
-plot_franke_noise(method = 'ols')
+plot_franke_noise()
 
         
         

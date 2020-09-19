@@ -12,6 +12,7 @@ import time
 from numba import jit
 from PIL import Image
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 # Add the src/ directory to the python path so we can import the code 
 # we need to use directly as 'from <file name> import <function/class>'
@@ -141,6 +142,12 @@ def plot_beta(method = 'ridge') :
         x1_train, x1_test, x2_train, x2_test, y_train, y_test, y_noise_train, y_noise_test = train_test_split(x1, x2, y_data,y_data_noise, test_size=0.35, random_state = 42)
         X_train = designMatrix(x1_train, x2_train, 3)
         X_test = designMatrix(x1_test, x2_test, 3)
+        scaler = StandardScaler()
+        scaler.fit(X_train)
+        X_train = scaler.transform(X_train)
+        X_train[:, 0] = 1
+        x_test = scaler.transform(X_test)
+        X_test[:, 0] = 1
         linreg.fit(X_train, y_noise_train, lambda_)
         linreg.predict(X_test)
         var, low, up = linreg.CI(y_test)
@@ -193,7 +200,7 @@ plot_beta(method = 'lasso')
 
 #####Bias-variance tradeoff for different values of lambda
 
-def plot_bias_var_tradeoff(ndegree = 5, sampling_method = 'bootstrap', method = 'ols'):
+def plot_bias_var_tradeoff(ndegree = 5, method = 'ols'):
     """
     Plots bias-variance tradeoff using either bootstrap or cross-validation
     
@@ -213,33 +220,22 @@ def plot_bias_var_tradeoff(ndegree = 5, sampling_method = 'bootstrap', method = 
     bias = []
     var = []
     MSE = []
-    if sampling_method == 'bootstrap':
-        for deg in range(1, ndegree + 1):
-            bias_, var_, mse_, betavar_ = Bootstrap(x1, x2, y, degrees = deg, method = method)
-            bias.append(bias_)
-            var.append(var_)
-            MSE.append(mse_)
-    if sampling_method == 'cv':
-        linreg = linregOwn(method='ols')
-        cv = CrossValidation(linreg, designMatrix)
-        for deg in range(1, ndegree + 1):
-            means =  cv.kFoldCV(x1, x2, y,10, degree = deg)
-            bias.append(means[3])
-            var.append(means[2])
-            MSE.append(means[0])
-            
+    for deg in range(1, ndegree + 1):
+        bias_, var_, mse_, betavar_ = Bootstrap(x1, x2, y, degrees = deg, method = method)
+        bias.append(bias_)
+        var.append(var_)
+        MSE.append(mse_)
+
     plot, ax = plt.subplots()
     plt.xlabel('Complexity (Order of polynomial)')
     plt.ylabel('MSE')
-    if sampling_method == 'bootstrap':
-        if method == 'ols':
-            plt.title('Bias-Variance tradeoff using bootstrap (OLS)')
-        if method == 'ridge':
-            plt.title('Bias-Variance tradeoff using bootstrap (Ridge)')
-        if method == 'lasso':
-            plt.title('Bias-Variance tradeoff using bootstrap (Lasso)')         
-    if sampling_method == 'cv':
-        plt.title('Bias-Variance tradeoff using cross-validation')
+    if method == 'ols':
+        plt.title('Bias-Variance tradeoff using bootstrap (OLS)')
+    if method == 'ridge':
+        plt.title('Bias-Variance tradeoff using bootstrap (Ridge)')
+    if method == 'lasso':
+        plt.title('Bias-Variance tradeoff using bootstrap (Lasso)')         
+    
     plt.plot(range(1, ndegree+1), MSE, 'k-o', label = 'MSE') 
     plt.plot(range(1, ndegree+1), bias, 'b-o',label= 'Bias')
     plt.plot(range(1, ndegree+1), var, 'r-o',label = 'Variance') 
@@ -252,9 +248,9 @@ def plot_bias_var_tradeoff(ndegree = 5, sampling_method = 'bootstrap', method = 
     return plt.show()
 
 ##MSE bias-variance tradeoff using bootstrap for different methods
-plot_bias_var_tradeoff(ndegree=6, sampling_method= 'bootstrap', method = 'ols')
+plot_bias_var_tradeoff(ndegree=6, method = 'ols')
 
-plot_bias_var_tradeoff(ndegree=6, sampling_method= 'bootstrap', method = 'ridge')
+plot_bias_var_tradeoff(ndegree=6, method = 'ridge')
 
-plot_bias_var_tradeoff(ndegree=6, sampling_method= 'bootstrap', method = 'lasso')
+plot_bias_var_tradeoff(ndegree=6, method = 'lasso')
 

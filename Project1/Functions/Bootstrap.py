@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from sklearn.utils import resample
 from sklearn.model_selection import train_test_split
 from numba import jit
+from sklearn.preprocessing import StandardScaler
+
 
 
 # Add the src/ directory to the python path so we can import the code 
@@ -35,12 +37,21 @@ def Bootstrap(x1,x2, y, N_boot=500, method = 'ols', degrees = 5, random_state = 
     x1_train, x1_test,x2_train, x2_test, y_train, y_test = train_test_split(x1,x2, y, test_size=0.2, random_state = random_state)
     y_pred_test = np.zeros((y_test.shape[0], N_boot))
     X_test = designMatrix(x1_test, x2_test, degrees)
+    
     betaMatrix = np.zeros((X_test.shape[1], N_boot))
     
     ##resample and fit the corresponding method on the train data
     for i in range(N_boot):
         x1_,x2_, y_ = resample(x1_train, x2_train, y_train)
         X_train = designMatrix(x1_, x2_, degrees)
+        scaler = StandardScaler()
+        scaler.fit(X_train)
+        X_train = scaler.transform(X_train)
+        X_train[:, 0] = 1
+        X_test = designMatrix(x1_test, x2_test, degrees)
+        X_test = scaler.transform(X_test)
+        X_test[:, 0] = 1
+        
         if method == 'ols':
             manual_regression = linregOwn(method = method)
             beta =  manual_regression.fit(X_train, y_)

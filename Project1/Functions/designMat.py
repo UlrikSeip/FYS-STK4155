@@ -2,11 +2,18 @@
 import numpy as np
 from numba import jit
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), 'Functions'))
+from Franke import franke
+
 
 ###Simple function
 def designMatrix(x, y, k=5):
     """
-    Generates the design matrix (covariates of polynomial degree k) and scales afterwards. 
+    Generates the design matrix (covariates of polynomial degree k). 
     Intercept is included in the design matrix. 
     Scaling does not apply to the intercept term.
     if k = 2, generated column vectors: 1, x, y, x^2, xy, y^2 
@@ -24,8 +31,7 @@ def designMatrix(x, y, k=5):
         for j in range(i+1):
             xb = np.c_[xb, (x**(i-j))*(y**j)]
     
-    scaler = StandardScaler()
-    xb = scaler.fit_transform(xb)
+    #scaler = StandardScaler()
+    #xb = scaler.fit_transform(xb)
     xb[:, 0] = 1
     return xb
-

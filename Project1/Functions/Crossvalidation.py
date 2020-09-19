@@ -10,6 +10,7 @@ from sklearn.model_selection import KFold
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.linear_model import LinearRegression
 from sklearn.utils import resample
+from sklearn.preprocessing import StandardScaler
 
 
 # Add the src/ directory to the python path so we can import the code 
@@ -72,12 +73,16 @@ class CrossValidation:
             x2_k = x2_shuff[i*M:(i+1)*M]
             y_k = y_shuff[i*M:(i+1)*M]
             
-            ## Generate train data
+            ## Generate train data and then scale both train and test
             index_true = np.array([True for i in range(x1.shape[0])])
             index_true[i*M:(i+1)*M] = False
             X_train = self.DesignMatrix(x1_shuff[index_true], x2_shuff[index_true], degree)
             y_train = y_shuff[index_true]
-            
+            scaler = StandardScaler()
+            scaler.fit(X_train)
+            X_train = scaler.transform(X_train)
+            X_train[:, 0] = 1
+ 
             ### Fit the regression on the train data
             beta = self.LinearRegression.fit(X_train, y_train, lambda_)
             y_predict_train = np.dot(X_train, beta)
@@ -85,6 +90,8 @@ class CrossValidation:
             
             ## Predict on the hold out data and calculate statistic of interest
             X_k = self.DesignMatrix(x1_k, x2_k, degree)
+            X_k = scaler.transform(X_k)
+            X_k[:, 0] = 1
             y_predict = np.dot(X_k,beta)
             MSE_k.append(np.sum((y_k-y_predict)**2, axis=0, keepdims=True)/len(y_predict))
             R2_k.append(1.0 - np.sum((y_k - y_predict)**2, axis=0, keepdims=True) / np.sum((y_k - np.mean(y_k))**2, axis=0, keepdims=True) )
@@ -102,12 +109,12 @@ class CrossValidation:
 
 
 # comparing with scikit-learn functionality
-#np.random.seed(18271)
-#x1 = np.random.rand(1000)
-#np.random.seed(91837)
-#x2 = np.random.rand(1000)
-#y = franke(x1, x2) + 0.1*np.random.normal(0, 1, x1.size)
-#linreg = linregOwn(method='ols')
+np.random.seed(18271)
+x1 = np.random.rand(1000)
+np.random.seed(91837)
+x2 = np.random.rand(1000)
+y = franke(x1, x2) + 0.1*np.random.normal(0, 1, x1.size)
+linreg = linregOwn(method='ols')
 #X = designMatrix(x1, x2)
 
 ##From my regression 0.019
@@ -119,9 +126,9 @@ class CrossValidation:
 #print(linreg.MSE(y_test))
 #print(linreg.R2(y_test))
 
-#CV_instance = CrossValidation(linreg, designMatrix)
-#means = CV_instance.kFoldCV(x1, x2, y, 10, degree = 2)
-
+CV_instance = CrossValidation(linreg, designMatrix)
+means = CV_instance.kFoldCV(x1, x2, y, 10, degree = 2)
+print(means)
 
 ##from sklearn regression similar 0.016
 #linear_reg = LinearRegression()
