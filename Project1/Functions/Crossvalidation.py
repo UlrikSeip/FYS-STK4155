@@ -108,34 +108,3 @@ class CrossValidation:
         return means
 
 
-# comparing with scikit-learn functionality
-np.random.seed(18271)
-x1 = np.random.rand(1000)
-np.random.seed(91837)
-x2 = np.random.rand(1000)
-y = franke(x1, x2) + 0.1*np.random.normal(0, 1, x1.size)
-linreg = linregOwn(method='ols')
-#X = designMatrix(x1, x2)
-
-##From my regression 0.019
-#from sklearn.model_selection import train_test_split
-#X_train, X_test, y_train, y_test = train_test_split(X, y)
-#linreg = linregOwn(method='ols')
-#linreg.fit(X_train, y_train)
-#yhat = linreg.predict(X_test)
-#print(linreg.MSE(y_test))
-#print(linreg.R2(y_test))
-
-CV_instance = CrossValidation(linreg, designMatrix)
-means = CV_instance.kFoldCV(x1, x2, y, 10, degree = 2)
-print(means)
-
-##from sklearn regression similar 0.016
-#linear_reg = LinearRegression()
-#kfolds = KFold(n_splits=10)
-#cv_mse = cross_val_score(linear_reg, X, y, scoring="neg_mean_squared_error", cv=kfolds)
-#print(np.mean(abs(cv_mse)))
-
-
-
-        
