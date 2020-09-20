@@ -53,14 +53,14 @@ def Bootstrap(x1,x2, y, N_boot=500, method = 'ols', degrees = 5, random_state = 
         X_test[:, 0] = 1
         
         if method == 'ols':
-            manual_regression = linregOwn(method = method)
+            manual_regression = linregOwn(method = 'ols')
             beta =  manual_regression.fit(X_train, y_)
         if method == 'ridge':
-            manual_regression = linregOwn(method = method)
-            beta =  manual_regression.fit(X_train, y_, lambda_ = 0.1)
+            manual_regression = linregOwn(method = 'ridge')
+            beta =  manual_regression.fit(X_train, y_, lambda_ = 0.05)
         if method == 'lasso':
-            manual_regression = linregOwn(method = method)
-            beta =  manual_regression.fit(X_train, y_, lambda_ = 0.1)
+            manual_regression = linregOwn(method = 'lasso')
+            beta =  manual_regression.fit(X_train, y_, lambda_ = 0.05)
             
         ##predict on the same test data
         y_pred_test[:, i] = np.dot(X_test, beta)
@@ -76,7 +76,6 @@ def Bootstrap(x1,x2, y, N_boot=500, method = 'ols', degrees = 5, random_state = 
     MSE = np.mean( np.mean((y_test - y_pred_test)**2, axis=1, keepdims=True) )
     bias = np.mean( (y_test - np.mean(y_pred_test, axis=1, keepdims=True))**2 )
     variance = np.mean( np.var(y_pred_test, axis=1, keepdims=True) )
-	##variance along the rows 
     betaVariance = np.var(betaMatrix, axis=1)
     print("-------------------------------------------------------------")
     print("Degree: %d" % degrees)

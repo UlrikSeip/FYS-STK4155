@@ -70,8 +70,7 @@ def data(image_number = 1, plotting = False):
     x2_test = YY.ravel()
     y_test = ZZ.ravel()
     
-    ##plot the data
-    if plotting :
+    if plotting :  ##plot the data
         fig = plt.figure()
         ax = fig.gca(projection='3d')
         ax.plot_surface(X,Y,Z,cmap=cm.coolwarm,linewidth=0, antialiased=False)
@@ -130,8 +129,7 @@ def fit_terrain(plot=False) :
             #plt.savefig(os.path.join(os.path.dirname(__file__), 'Plots', method+'terrain.png'), transparent=True, bbox_inches='tight')
             plt.show()
             
-    ##Plots the extracted test data
-    if plot :
+    if plot :  ##Plots the extracted test data
         x = np.linspace(0, 1, 60)
         y = np.copy(x)
         XX,YY = np.meshgrid(x,y)
@@ -149,6 +147,7 @@ def fit_terrain(plot=False) :
 
 fit_terrain(plot = True)
 
+
 ##Plot MSE for each model by cross-validation
 def MSE_terrain() :
     """
@@ -158,8 +157,7 @@ def MSE_terrain() :
     x1_train, x2_train, y_train, x1_test, x2_test, y_test = data(image_number=2, plotting=False)
 
     degree = 10
-    ## Fit and predict ols
-    linreg = linregOwn(method='ols')
+    linreg = linregOwn(method='ols')  ## Fit and predict ols
     X_train = designMatrix(x1_train, x2_train, degree)
     scaler = StandardScaler()
     scaler.fit(X_train)
@@ -173,12 +171,12 @@ def MSE_terrain() :
     linreg.predict(X_test)
     ols_MSE = linreg.MSE(y_test)
     ols_MSE = np.array([ols_MSE, ols_MSE])
-    ##lambda just for plotting 
-    ols_lambda = np.array([1e-5, 1])
+    ols_lambda = np.array([1e-4, 1])  ##lambda just for plotting
 
     ###Choose lambda for ridge and fit and compute MSE on the test data
-    ridge_lambda = np.logspace(-3,0,10)
+    ridge_lambda = np.logspace(-4,0,10)
     ridge_MSE = []
+    
     for lambda_ in ridge_lambda : 
         print("ridge "+ str(lambda_))
 
@@ -203,6 +201,7 @@ def MSE_terrain() :
     ##Choose lambda for lasso and fit and compute MSE on the test data
     lasso_lambda = np.logspace(-4,0,10)
     lasso_MSE = []
+    
     for lambda_ in lasso_lambda : 
         print("lasso " + str(lambda_))
         linreg = linregOwn(method='lasso')
@@ -220,7 +219,7 @@ def MSE_terrain() :
         yHat = linreg.predict(X_test)
         lasso_MSE.append(np.sum( (y_test-yHat)**2)/len(y_test))
 
-    lasso_MSE = np.array(ridge_MSE)
+    lasso_MSE = np.array(lasso_MSE)
 
     ######################################################## plot
     plt.rc('text', usetex=True)

@@ -52,8 +52,8 @@ class CrossValidation:
         
         """
         self.lambda_ = lambda_
-        ## Split input data x in k folds of size M
-        M = x1.shape[0]//k
+        M = x1.shape[0]//k   ## Split input data x in k folds of size M
+
         
         ##save the statistic in the list
         MSE_train = []
@@ -67,6 +67,7 @@ class CrossValidation:
         x1_shuff = x1[shf]
         x2_shuff = x2[shf]
         y_shuff = y[shf]
+        
         for i in range(k):
             # x_k and y_k are the hold out data for fold k
             x1_k = x1_shuff[i*M:(i+1)*M]

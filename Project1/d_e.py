@@ -46,8 +46,8 @@ def MSE_Ridge_Lasso(method = 'lasso') :
 
 
     ind = -1
-    ##10 is a default base
-    for lambda_ in np.logspace(-2, 0, 3) :    
+
+    for lambda_ in np.logspace(-2, 0, 3) :    ##10 is a default base 
         ind += 1
         MSE_noise = []
 
@@ -59,6 +59,7 @@ def MSE_Ridge_Lasso(method = 'lasso') :
             
             ##Compute MSE using cross-validation. Might take some time before we get plots, should be optimized with jit
             ##but no time to do that for all classes
+            
             n = int(1000)
             np.random.seed(18271)
             x1 = np.random.rand(n)
@@ -81,6 +82,7 @@ def MSE_Ridge_Lasso(method = 'lasso') :
             #R2_noise.          append(linreg.R2(y_noise_test))
             #MSE.append(linreg.MSE(y_test))
             #R2.append(linreg.MSE(y_test))
+            
             MSE_noise     .append(means_noise[0])
             MSE           .append(means[0])
 
@@ -91,6 +93,7 @@ def MSE_Ridge_Lasso(method = 'lasso') :
             ax1.loglog(noise, np.array(MSE_noise), colors[ind]+'-o', markersize=5, label=r"OLS")
         else :
             ax1.loglog(noise, np.array(MSE_noise), colors[ind]+'-o', markersize=1, label=r"$\lambda=10^{%d}$"%(int(np.log10(lambda_))))
+        
         plt.ylabel(r"MSE", fontsize=10)
         plt.xlabel(r"noise scale $\eta$", fontsize=10)
         plt.subplots_adjust(left=0.2,bottom=0.2)
@@ -152,8 +155,7 @@ def plot_beta(method = 'ridge') :
         linreg.predict(X_test)
         var, low, up = linreg.CI(y_test)
         
-        ##Append lists together
-        beta.append(linreg.fit(X_train, y_noise_train, lambda_))
+        beta.append(linreg.fit(X_train, y_noise_train, lambda_)) ##Append lists together
         beta_variance.append(np.sqrt(var))
 
     beta = np.array(beta)
@@ -198,6 +200,8 @@ def plot_beta(method = 'ridge') :
 plot_beta(method = 'ridge')
 plot_beta(method = 'lasso')
 
+
+
 #####Bias-variance tradeoff for different values of lambda
 
 def plot_bias_var_tradeoff(ndegree = 5, method = 'ols'):
@@ -210,8 +214,7 @@ def plot_bias_var_tradeoff(ndegree = 5, method = 'ols'):
     method: character type, accepts arguments 'ols', 'ridge' or 'lasso'
     """
     
-    ##make synthetic data
-    n = 500
+    n = 500 ##make synthetic data
     np.random.seed(18271)
     x1 = np.random.rand(n)
     np.random.seed(91837)
@@ -220,6 +223,7 @@ def plot_bias_var_tradeoff(ndegree = 5, method = 'ols'):
     bias = []
     var = []
     MSE = []
+    
     for deg in range(1, ndegree + 1):
         bias_, var_, mse_, betavar_ = Bootstrap(x1, x2, y, degrees = deg, method = method)
         bias.append(bias_)
@@ -229,6 +233,7 @@ def plot_bias_var_tradeoff(ndegree = 5, method = 'ols'):
     plot, ax = plt.subplots()
     plt.xlabel('Complexity (Order of polynomial)')
     plt.ylabel('MSE')
+    
     if method == 'ols':
         plt.title('Bias-Variance tradeoff using bootstrap (OLS)')
     if method == 'ridge':
@@ -243,9 +248,11 @@ def plot_bias_var_tradeoff(ndegree = 5, method = 'ols'):
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
     plt.legend()
     plt.subplots_adjust(left=0.2,bottom=0.2,right=0.9)
-    #plt.savefig(os.path.join(os.path.dirname(__file__), 'Plots', 'lasso_bias_var_bootstrap.png'), transparent=True, bbox_inches='tight')
+    #plt.savefig(os.path.join(os.path.dirname(__file__), 'Plots', 'lasso_bias_var.png'), transparent=True, bbox_inches='tight')
 
     return plt.show()
+
+
 
 ##MSE bias-variance tradeoff using bootstrap for different methods
 plot_bias_var_tradeoff(ndegree=6, method = 'ols')

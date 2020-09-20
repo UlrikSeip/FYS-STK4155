@@ -52,14 +52,12 @@ def plot_franke(x, y, franke_ = False, noise = False, scalor = 0.05, method = 'o
                     'ridge' or 'lasso
     """
     x,y = np.meshgrid(x,y)
-    ##true franke values
-    f = franke(x,y) 
-    ##noisy franke values
-    if(noise):
+    f = franke(x,y) ##true franke values
+    
+    if(noise):  ##noisy franke values
         f = franke(x,y) + scalor*np.random.normal(0, 1, franke(x,y).shape)
     
-    ##fit and predict ols
-    if method == 'ols':
+    if method == 'ols': ##fit and predict ols
         np.random.seed(seed1)
         x_new = np.random.rand(500)
         y_new = np.random.rand(500)
@@ -89,8 +87,8 @@ def plot_franke(x, y, franke_ = False, noise = False, scalor = 0.05, method = 'o
     
         f_predict = np.dot(xb_new, beta)
         F_predict = f_predict.reshape(F_true.shape)
-    ##fit and predict ridge
-    if method == 'ridge':
+    
+    if method == 'ridge': ##fit and predict ridge
         np.random.seed(seed1)
         x_new = np.random.rand(500)
         y_new = np.random.rand(500)
@@ -120,8 +118,8 @@ def plot_franke(x, y, franke_ = False, noise = False, scalor = 0.05, method = 'o
     
         f_predict = np.dot(xb_new, beta)
         F_predict = f_predict.reshape(F_true.shape)
-    ##fit and predict lasso
-    if method == 'lasso':
+    
+    if method == 'lasso': ##fit and predict lasso
         np.random.seed(seed1)
         x_new = np.random.rand(500)
         y_new = np.random.rand(500)
@@ -156,6 +154,7 @@ def plot_franke(x, y, franke_ = False, noise = False, scalor = 0.05, method = 'o
     fig = plt.figure()
     ax = fig.gca(projection='3d') ##get current axis
     ## antialiased controls the transparency of the surface
+    
     if method == 'ols':
         if absolute_error == True:
             surf = ax.plot_surface(Xnew, Ynew,abs(F_predict-F_true), cmap = cm.coolwarm, linewidth = 0, antialiased = False)

@@ -27,11 +27,10 @@ def designMatrix(x, y, k=5):
     """
     
     xb = np.ones((x.size, 1))
+    
     for i in range(1, k+1):
         for j in range(i+1):
             xb = np.c_[xb, (x**(i-j))*(y**j)]
-    
-    #scaler = StandardScaler()
-    #xb = scaler.fit_transform(xb)
+
     xb[:, 0] = 1
     return xb

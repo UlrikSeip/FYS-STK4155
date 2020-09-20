@@ -35,8 +35,7 @@ def plot_MSE_Complexity(degree = 5, graph = True):
     graph: Binary type with inputs True/False. If True, plots the MSE on the train and test data
     """
     
-    ##Make synthetic data
-    n = 300
+    n = 300  ##Make synthetic data
     np.random.seed(18271)
     x1 = np.random.rand(n)
     np.random.seed(91837)
@@ -47,7 +46,9 @@ def plot_MSE_Complexity(degree = 5, graph = True):
     x1_train, x1_test, x2_train, x2_test, y_train, y_test = train_test_split(x1, x2, y, test_size=0.2)
     MSE_train     = []
     MSE_test      = []
+    
     ##fit OLS with polynomial of different degree and compute MSE on the train and test data(with scaling)
+    
     for degs in range(1, degree+1):
         X_train_     = designMatrix(x1_train, x2_train, degs)
         scaler = StandardScaler()
@@ -66,11 +67,13 @@ def plot_MSE_Complexity(degree = 5, graph = True):
         pred_test_ = linreg.predict(X_test_)
         MSE_test_ = linreg.MSE(y_test)
         MSE_test.append(MSE_test_)
+        
     print('-------------------------------------------------')
     print('MSE_test: {}' .format(np.round(MSE_test, 4)))
     print('MSE_train: {}' .format(np.round(MSE_train, 4)))
     print('The polynomial fit of degree {} performs best' .format(MSE_test.index(min(MSE_test))+1))
     print('-------------------------------------------------')
+    
     if graph == True:
         plot, ax = plt.subplots()
         plt.xlabel('Complexity (Order of polynomial)')
@@ -83,10 +86,11 @@ def plot_MSE_Complexity(degree = 5, graph = True):
         plt.legend()
         plt.subplots_adjust(left=0.2,bottom=0.2,right=0.9)
         #plt.savefig(os.path.join(os.path.dirname(__file__), 'Plots', 'MSE_train_test.png'), transparent=True, bbox_inches='tight')
+    
     return plt.show()
 
-##train and test data MSE  
-plot_MSE_Complexity(degree = 10, graph = True)  
+ 
+plot_MSE_Complexity(degree = 10, graph = True)  ##train and test data MSE 
 
 
 
@@ -103,8 +107,7 @@ def plot_bias_var_tradeoff(ndegree = 6, method = 'ols'):
     method:  character type. Accepts only the arguments 'ols', 'ridge', 'lasso'
     """
     
-    ##Create synthetic data
-    n = 500
+    n = 500  ##Create synthetic data
     np.random.seed(18271)
     x1 = np.random.rand(n)
     np.random.seed(91837)
@@ -113,7 +116,9 @@ def plot_bias_var_tradeoff(ndegree = 6, method = 'ols'):
     bias = []
     var = []
     MSE = []
+    
     ##compute bias, variance and mse using bootstrap
+    
     for deg in range(1, ndegree + 1):
         bias_, var_, mse_, betavar_ = Bootstrap(x1, x2, y, degrees = deg, method = method)
         bias.append(bias_)
@@ -132,6 +137,7 @@ def plot_bias_var_tradeoff(ndegree = 6, method = 'ols'):
     plt.legend()
     plt.subplots_adjust(left=0.2,bottom=0.2,right=0.9)
     #plt.savefig(os.path.join(os.path.dirname(__file__), 'Plots', 'ols_bias_var.png'), transparent=True, bbox_inches='tight')
+    
     return plt.show()
   
   
@@ -152,6 +158,7 @@ def plot_franke_noise() :
     
     """
     ##Make synthetic data
+    
     n = 1000
     np.random.seed(18271)
     x1 = np.random.rand(n)
@@ -166,8 +173,7 @@ def plot_franke_noise() :
 
     noise = np.logspace(-4,0,50)
     k = 1
-
-    
+  
     for eta in noise :
         y_data_noise = y +  eta * np.random.standard_normal(size = y.size)
         linreg = linregOwn(method = 'ols')
@@ -190,6 +196,7 @@ def plot_franke_noise() :
         linreg_NOnoise.predict(X_test)
         MSE.append(linreg.MSE(y_test))
         R2. append(linreg.R2(y_test))
+        
     fig, ax1 = plt.subplots()
     ax1.loglog(noise, 1-np.array(R2_noise),'k-o',markersize=2)
     ax1.loglog(noise, 1-np.array(R2),'k--',markersize=2)
