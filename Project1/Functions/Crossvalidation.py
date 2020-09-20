@@ -13,8 +13,7 @@ from sklearn.utils import resample
 from sklearn.preprocessing import StandardScaler
 
 
-# Add the src/ directory to the python path so we can import the code 
-# we need to test directly as 'from <file name> import <function/class>'
+# Add the Functions/ directory to the python path so we can import the code 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'Functions'))
 
 from LinearReg import linregOwn, linregSKL

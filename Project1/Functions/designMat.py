@@ -6,6 +6,8 @@ from sklearn.model_selection import train_test_split
 import sys
 import os
 
+
+# Add the Functions/ directory to the python path so we can import the code 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'Functions'))
 from Franke import franke
 
