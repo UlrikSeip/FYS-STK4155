@@ -103,8 +103,12 @@ def fit_terrain(plot=False) :
         scaler.fit(X_train)
         X_train = scaler.transform(X_train)
         X_train[:, 0] = 1
-        linreg.fit(X_train,y_train, lambda_ = lambda_)
-
+        
+        if method == 'ols':
+            linreg.fit(X_train,y_train, lambda_ = 0)
+        else:
+            linreg.fit(X_train,y_train, lambda_ = lambda_)
+        
         X_test = designMatrix(x1_test, x2_test)
         x_test = scaler.transform(X_test)
         X_test[:, 0] = 1

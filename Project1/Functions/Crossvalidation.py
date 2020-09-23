@@ -35,7 +35,7 @@ class CrossValidation:
         self.LinearRegression = LinearRegression
         self.DesignMatrix = DesignMatrix
     
-    def kFoldCV(self, x1, x2, y, k = 10, lambda_ = 0, degree = 3):
+    def kFoldCV(self, x1, x2, y, k = 10, lambda_ = 0, degree = 5):
         """
         Performs shuffling of the data, holds a split of the data as a test set at each split and evaluates the model
         on the rest of the data. 

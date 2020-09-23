@@ -23,10 +23,13 @@ from designMat import designMatrix
 from Bootstrap import Bootstrap
 from Crossvalidation import CrossValidation
 
-#####Plot the MSE of the ridge and lasso fits for different values of lambda
+#####Plot the MSE of the ridge and lasso fits for different values of lambda and polynomial degree
+
+
 def MSE_Ridge_Lasso(method = 'lasso') :
     """
-    Plots mean squared error (MSE) as a function of the noise scalor for different values of the shrinkage parameter
+    Plots mean squared error (MSE) as a function of the polyomial degree (complexity parameter p) 
+    for different values of the shrinkage parameter
     when lasso and ridge are used as the methods
     
     Arguments:
@@ -38,7 +41,6 @@ def MSE_Ridge_Lasso(method = 'lasso') :
     MSE                = []
     R2                 = []
 
-    noise = np.linspace(0, 1.0, 50)
     k = 1
     fig, ax1 = plt.subplots()
     plt.rc('text', usetex=True)
@@ -46,11 +48,11 @@ def MSE_Ridge_Lasso(method = 'lasso') :
 
     ind = -1
 
-    for lambda_ in np.logspace(-2, 0, 3) :    ##10 is a default base 
+    for lambda_ in np.logspace(-4, 0, 5) :    ##10 is a default base 
         ind += 1
         MSE_noise = []
 
-        for eta in noise :
+        for deg in range(1, 18) :
             if ind == 0 :
                 linreg = linregOwn(method='ols')
             else :
@@ -65,22 +67,10 @@ def MSE_Ridge_Lasso(method = 'lasso') :
             np.random.seed(91837)
             x2 = np.random.rand(n)
             y_data =  franke(x1, x2)           
-            y_data_noise = y_data +  eta * np.random.standard_normal(size=n)
+            y_data_noise = y_data +  0.1 * np.random.standard_normal(size=n)
             CV_instance = CrossValidation(linreg, designMatrix)
-            means_noise = CV_instance.kFoldCV(x1, x2, y_data_noise, 10, lambda_ = lambda_, degree = 5)
-            means = CV_instance.kFoldCV(x1, x2, y_data, 10, lambda_ = lambda_, degree = 5)
-            
-            ##Using the normal method gives the same results (i.e. holding out a train data)
-            #x1_train, x1_test, x2_train, x2_test, y_train, y_test, y_noise_train, y_noise_test = train_test_split(x1, x2, y_data,y_data_noise, test_size=0.35, random_state = 42)
-            #X_train = designMatrix(x1_train, x2_train, 5)
-            #X_test = designMatrix(x1_test, x2_test, 5)
-            #linreg.fit(X_train, y_noise_train, lambda_)
-            #linreg.predict(X_test)
-            
-            #MSE_noise.         append(linreg.MSE(y_noise_test))
-            #R2_noise.          append(linreg.R2(y_noise_test))
-            #MSE.append(linreg.MSE(y_test))
-            #R2.append(linreg.MSE(y_test))
+            means_noise = CV_instance.kFoldCV(x1, x2, y_data_noise, 10, lambda_ = lambda_, degree = deg)
+            means = CV_instance.kFoldCV(x1, x2, y_data, 10, lambda_ = lambda_, degree = deg)
             
             MSE_noise     .append(means_noise[0])
             MSE           .append(means[0])
@@ -89,25 +79,26 @@ def MSE_Ridge_Lasso(method = 'lasso') :
         colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
 
         if ind == 0 :
-            ax1.loglog(noise, np.array(MSE_noise), colors[ind]+'-o', markersize=5, label=r"OLS")
+            plt.plot(range(1, 18), np.array(MSE_noise), colors[ind]+'-o', markersize=5, label=r"OLS")
         else :
-            ax1.loglog(noise, np.array(MSE_noise), colors[ind]+'-o', markersize=1, label=r"$\lambda=10^{%d}$"%(int(np.log10(lambda_))))
+            plt.plot(range(1, 18), np.array(MSE_noise), colors[ind]+'-o', markersize=1, label=r"$\lambda=10^{%d}$"%(int(np.log10(lambda_))))
         
         plt.ylabel(r"MSE", fontsize=10)
-        plt.xlabel(r"noise scale $\eta$", fontsize=10)
+        plt.xlabel(r"Polynomial degree $p$", fontsize=10)
         plt.subplots_adjust(left=0.2,bottom=0.2)
 
         #ax1.set_ylim([0.95*min(min(MSE_noise), min(R2_noise)), 1.05*(max(max(MSE_noise), max(R2_noise)))])
         
     ax1.legend()
-    #plt.savefig(os.path.join(os.path.dirname(__file__), 'Plots', 'MSE_lasso_noise.png'), transparent=True, bbox_inches='tight')
+    #plt.savefig(os.path.join(os.path.dirname(__file__), 'Plots', 'MSE_lasso_noise_2.png'), transparent=True, bbox_inches='tight')
     plt.show()
-    
+
+
 MSE_Ridge_Lasso(method='ridge')
 MSE_Ridge_Lasso(method='lasso')
 
-
 ###plot coefficients of beta
+
 def plot_beta(method = 'ridge') :
     """
     Plots coefficients (beta) for ridge and lasso methods for different values of the shrinkage parameter (lambda)
@@ -259,4 +250,3 @@ plot_bias_var_tradeoff(ndegree=6, method = 'ols')
 plot_bias_var_tradeoff(ndegree=6, method = 'ridge')
 
 plot_bias_var_tradeoff(ndegree=6, method = 'lasso')
-

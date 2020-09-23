@@ -110,7 +110,7 @@ class linregOwn:
             self.beta : numpy.array
             The beta parameters from the performed fit
         """
-        self.regression = linear_model.Lasso(fit_intercept=True, max_iter=100000, alpha=self.lambda_)
+        self.regression = linear_model.Lasso(fit_intercept=True, max_iter=1000000, alpha=self.lambda_)
         self.regression.fit(X_train,y_train)
         self.beta = self.regression.coef_
         self.beta[0] = self.regression.intercept_ 
